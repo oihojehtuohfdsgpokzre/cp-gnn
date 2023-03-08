@@ -1,0 +1,22 @@
+{
+  "map_file": "lyon.osm",
+	"graph_file": "map_lyon.json",
+	"area": {
+				"min_lat": 45.751,
+				"max_lat": 45.7566,
+				"min_lon": 4.8235,
+				"max_lon": 4.830
+		  },
+	"__road_types": ["primary", "secondary", "tertiary", "residential", "service", "track", "unclassified"],
+	"road_types": ["primary", "residential"],
+	"skipped_types": ["motorway", "elevator", "steps"],
+	"max_mission_time": 2500,
+	"nb_observations": 3,
+	"nb_forced_wp": 2,
+	"nb_waypoints": 8,
+	"verbose": 1,
+	"plot": 1,
+	"plot_dir": "plots/",
+	"edges_colors": ["blue", "cyan", "teal", "grey", "gold", "green", "lightgreen"]
+}		
+ 
