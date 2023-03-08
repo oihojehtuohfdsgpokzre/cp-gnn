@@ -258,8 +258,8 @@ def solve_with_minizinc(start, end, allpoints, shortest_costs, edge_prediction, 
 
 def main():
     # Parameters:
-    city = 'reykjavik'
-    problem_lenght = 18
+    city = 'seattle'
+    problem_lenght = 32
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('inference on', device)
@@ -269,7 +269,7 @@ def main():
     
     edge_index, edge_attr = gen_edges(number_of_nodes, adj_matrix)
 
-    database_validation = gen_database(os.path.join('..', 'datasets', 'test', 'DB_'+city+'_len_18.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
+    database_validation = gen_database(os.path.join('..', 'datasets', 'test', 'DB_'+city+'_len_'+str(problem_lenght)+'.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
 
     print('data base loaded', len(database_validation))
     
