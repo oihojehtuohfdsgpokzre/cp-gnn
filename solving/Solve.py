@@ -11,6 +11,7 @@ import json
 from minizinc import Instance, Model, Solver, Status
 import datetime
 import matplotlib.pyplot as plt
+import tikzplotlib
 
 # Chargement graph data
 def loadData(path):
@@ -180,18 +181,20 @@ def gen_database(path, number_of_nodes, shortest_costs, edge_index, edge_attr, m
     return database
     
     
-def read_intermediate_values(path, optimal):
+def read_intermediate_values(path, optimal, needed_time):
     f = open(path, 'r')
     timings = []
     values = []
     for line in f.readlines():
+        if 'UNKNOWN' in line:
+            return timings, values
         if 'sum_path' in line:
             # sum_path = 163337.0;
             cur_length = float(line.split('=')[1][:-2]) / 10000
         if 'elapsed' in line:
             # % time elapsed: 0.90 s
             cur_time = float(line.split(':')[1][:-3])
-            timings.append(cur_time)
+            timings.append(cur_time+needed_time)
             values.append(cur_length / optimal - 1)
     f.close()
     return timings, values
@@ -234,13 +237,22 @@ def solve_with_minizinc(start, end, allpoints, shortest_costs, edge_prediction, 
     with open('tmp.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)        
 
-    os.system('minizinc find_treshold.mzn tmp.json > tmp_res.txt')
+    os.system('minizinc -i find_treshold.mzn tmp.json --output-time --time-limit 10000 > tmp_res.txt')
     
     f = open('tmp_res.txt', 'r')
     for line in f.readlines():
+        if 'UNKNOWN' in line:
+            minimum_TH = 0
+            print('unknown min treshold, setting 0')
         if 'min_treshold' in line:
             # min_treshold = 80;
             minimum_TH = int(line.split('=')[1][:-2])
+        if 'elapsed' in line:
+            # % time elapsed: 4.17 s
+            needed_time = float(line.split(':')[1][:-2])
+            print(minimum_TH, 'found in', needed_time)
+        if '==========' in line:
+            break
     f.close()
 
     data['minimum_TH'] = minimum_TH
@@ -249,17 +261,17 @@ def solve_with_minizinc(start, end, allpoints, shortest_costs, edge_prediction, 
         json.dump(data, f, ensure_ascii=False, indent=4)        
 
 
-    os.system('minizinc -i guided_solver.mzn data.json --output-time --time-limit 10000 > guided_res.txt')
-    guided_timings, guided_values = read_intermediate_values('guided_res.txt', optimal)
-    os.system('minizinc -i unguided_solver.mzn data.json --output-time  --time-limit 10000 > unguided_res.txt')
-    unguided_timings, unguided_values  = read_intermediate_values('unguided_res.txt', optimal)
+    os.system('minizinc -i guided_solver.mzn data.json --output-time --time-limit 50000 > guided_res.txt')
+    guided_timings, guided_values = read_intermediate_values('guided_res.txt', optimal, needed_time)
+    os.system('minizinc -i unguided_solver.mzn data.json --output-time  --time-limit 50000 > unguided_res.txt')
+    unguided_timings, unguided_values  = read_intermediate_values('unguided_res.txt', optimal, 0.0)
     return guided_timings, guided_values, unguided_timings, unguided_values
     
 
 def main():
     # Parameters:
-    city = 'seattle'
-    problem_lenght = 32
+    city = 'angers'
+    problem_lenght = 34
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print('inference on', device)
@@ -294,8 +306,18 @@ def main():
         
         guided_timings, guided_values, unguided_timings, unguided_values = solve_with_minizinc(start, end, wps, shortest_costs, edge_prediction, optimal, city, ind)
         
-        print('best unguided', unguided_values[-1], 'best guided', guided_values[-1])
-        log_file = open('inference_results.txt', 'a')
+        
+        if len(guided_values) > 0:
+            best_guided = guided_values[-1]
+        else:
+            best_guided = 'unknow'
+        if len(unguided_values) > 0:
+            best_unguided = unguided_values[-1]
+        else:
+            best_unguided = 'unknow'
+        
+        print('best unguided', best_unguided, 'best guided', best_guided)
+        log_file = open('inference_results_'+city+'_'+str(problem_lenght)+'.txt', 'a')
         print('problem:', ind, file = log_file)
         for ind in range(len(guided_timings)):
             print('guided:t:', guided_timings[ind], ':v:', guided_values[ind], file = log_file)
@@ -305,7 +327,11 @@ def main():
         plt.plot(unguided_timings,unguided_values, 'k')
         plt.plot(guided_timings,guided_values, 'g')
         
+    plt.ylabel("solution gap")
+    plt.xlabel("solving time (s)")
+    plt.draw()        
     plt.show()
+    tikzplotlib.save('inference_reykjavik_'+city+'_'+str(problem_lenght)+'.tex')
 
 
 main()
