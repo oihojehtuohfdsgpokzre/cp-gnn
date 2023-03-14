@@ -225,10 +225,10 @@ def learn_a_city(city, graph_path):
 
     edge_index, edge_attr = gen_edges(number_of_nodes, adj_matrix)
         
-    database        = gen_database(os.path.join('..', 'Datasets', 'Train','DB_train_'+city+'_len_10to30.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
-    database_test7  = gen_database(os.path.join('..', 'Datasets', 'test','DB_'+city+'_len_7.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
-    database_test32 = gen_database(os.path.join('..', 'Datasets', 'test','DB_'+city+'_len_32.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
-    database_test62 = gen_database(os.path.join('..', 'Datasets', 'test','DB_'+city+'_len_62.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
+    database        = gen_database(os.path.join('..', 'datasets', 'train','DB_train_'+city+'_len_10to30.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
+    database_test7  = gen_database(os.path.join('..', 'datasets', 'test','DB_'+city+'_len_7.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
+    database_test32 = gen_database(os.path.join('..', 'datasets', 'test','DB_'+city+'_len_32.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
+    database_test62 = gen_database(os.path.join('..', 'datasets', 'test','DB_'+city+'_len_62.csv'), number_of_nodes, shortest_costs, edge_index, edge_attr)
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
